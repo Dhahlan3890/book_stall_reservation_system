@@ -85,83 +85,85 @@ def login():
 
 @auth_bp.route('/refresh', methods=['POST'])
 @jwt_required(refresh=True)
-def refresh():
+def refresh() -> tuple:
     """Refresh access token"""
     identity = get_jwt_identity()
     user = User.query.get(identity)
-    
+
     if not user:
         return jsonify({'error': 'User not found'}), 404
-    
-    access_token = create_access_token(identity=str(user.id), additional_claims={'type': 'user'})
+
+    access_token = create_access_token(
+        identity=str(user.id),
+        additional_claims={'type': 'user'}
+    )
     return jsonify({'access_token': access_token}), 200
+
 
 @auth_bp.route('/me', methods=['GET'])
 @jwt_required()
-def get_current_user():
+def get_current_user() -> tuple:
     """Get current user information"""
     user_id = get_jwt_identity()
+
     # Convert string ID back to int for query
     user = User.query.get(int(user_id))
-    
+
     if not user:
         return jsonify({'error': 'User not found'}), 404
-    
+
     return jsonify(user.to_dict()), 200
+
 
 @auth_bp.route('/profile', methods=['PUT'])
 @jwt_required()
-def update_profile():
+def update_profile() -> tuple:
     """Update user profile"""
     user_id = get_jwt_identity()
     user = User.query.get(int(user_id))
-    
+
     if not user:
         return jsonify({'error': 'User not found'}), 404
-    
-    data = request.get_json()
-    
-    # Update fields
-    if 'business_name' in data:
-        user.business_name = data['business_name']
-    if 'phone' in data:
-        user.phone = data['phone']
-    if 'address' in data:
-        user.address = data['address']
-    if 'city' in data:
-        user.city = data['city']
-    if 'country' in data:
-        user.country = data['country']
-    
+
+    data = request.get_json() or {}
+
+    # Update allowed fields dynamically
+    for field in ['business_name', 'phone', 'address', 'city', 'country']:
+        if field in data:
+            setattr(user, field, data[field])
+
     user.updated_at = datetime.utcnow()
     db.session.commit()
-    
+
     return jsonify({
         'message': 'Profile updated successfully',
         'user': user.to_dict()
     }), 200
 
+
 @auth_bp.route('/change-password', methods=['POST'])
 @jwt_required()
-def change_password():
+def change_password() -> tuple:
     """Change user password"""
     user_id = get_jwt_identity()
     user = User.query.get(int(user_id))
-    
+
     if not user:
         return jsonify({'error': 'User not found'}), 404
-    
-    data = request.get_json()
-    
-    if not data.get('old_password') or not data.get('new_password'):
+
+    data = request.get_json() or {}
+    old_password = data.get('old_password')
+    new_password = data.get('new_password')
+
+    if not old_password or not new_password:
         return jsonify({'error': 'Missing old_password or new_password'}), 400
-    
-    if not user.check_password(data['old_password']):
+
+    if not user.check_password(old_password):
         return jsonify({'error': 'Old password is incorrect'}), 401
-    
-    user.set_password(data['new_password'])
+
+    user.set_password(new_password)
     db.session.commit()
-    
+
     return jsonify({'message': 'Password changed successfully'}), 200
 
 # ============== EMPLOYEE AUTHENTICATION ==============
