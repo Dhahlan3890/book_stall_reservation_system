@@ -280,10 +280,5 @@ def reject_reservation(reservation_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-<<<<<<< HEAD
 # Import db here to use db.func
 from models import db
-=======
-
-from models import db
->>>>>>> 7c969f931cc5f3b8a87b1f3be6458d242943be9e

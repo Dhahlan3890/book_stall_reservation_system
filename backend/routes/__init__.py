@@ -1,4 +1,3 @@
-# Routes __init__.py
 from .auth import auth_bp
 from .stall import stall_bp
 from .reservation import reservation_bp
