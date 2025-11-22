@@ -2,82 +2,92 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from models import db, Stall, Reservation, User
 from sqlalchemy import and_
-from typing import Dict, Any, List, Optional
 
 stall_bp = Blueprint('stalls', __name__, url_prefix='/api/stalls')
-
-def _with_reservation_info(stall_obj) -> Dict[str, Any]:
-    data = stall_obj.to_dict()
-    active_reservation = Reservation.query.filter(
-        and_(
-            Reservation.stall_id == stall_obj.id,
-            Reservation.status == 'confirmed'
-        )
-    ).first()
-
-    data['is_reserved'] = active_reservation is not None
-    data['reserved_by'] = active_reservation.user.username if active_reservation else None
-    return data
-
 
 @stall_bp.route('', methods=['GET'])
 def get_all_stalls():
     """Get all stalls with availability status"""
     stalls = Stall.query.all()
-
-    stall_list: List[Dict[str, Any]] = []
+    
+    stall_list = []
     for stall in stalls:
-        stall_list.append(_with_reservation_info(stall))
-
+        stall_data = stall.to_dict()
+        # Check if reserved
+        active_reservation = Reservation.query.filter(
+            and_(
+                Reservation.stall_id == stall.id,
+                Reservation.status == 'confirmed'
+            )
+        ).first()
+        stall_data['is_reserved'] = active_reservation is not None
+        stall_data['reserved_by'] = None
+        if active_reservation:
+            stall_data['reserved_by'] = active_reservation.user.username
+        stall_list.append(stall_data)
+    
     return jsonify(stall_list), 200
-
 
 @stall_bp.route('/<int:stall_id>', methods=['GET'])
-def get_stall(stall_id: int):
+def get_stall(stall_id):
     """Get stall details"""
     stall = Stall.query.get(stall_id)
-
+    
     if not stall:
         return jsonify({'error': 'Stall not found'}), 404
-
-    stall_data = _with_reservation_info(stall)
+    
+    stall_data = stall.to_dict()
+    active_reservation = Reservation.query.filter(
+        and_(
+            Reservation.stall_id == stall.id,
+            Reservation.status == 'confirmed'
+        )
+    ).first()
+    stall_data['is_reserved'] = active_reservation is not None
+    stall_data['reserved_by'] = None
+    if active_reservation:
+        stall_data['reserved_by'] = active_reservation.user.username
+    
     return jsonify(stall_data), 200
 
-
 @stall_bp.route('/by-size/<size>', methods=['GET'])
-def get_stalls_by_size(size: str):
+def get_stalls_by_size(size):
     """Get stalls by size"""
-    valid_sizes = ('small', 'medium', 'large')
-    if size not in valid_sizes:
+    if size not in ['small', 'medium', 'large']:
         return jsonify({'error': 'Invalid size. Must be small, medium, or large'}), 400
-
+    
     stalls = Stall.query.filter_by(size=size).all()
-
-    stall_list: List[Dict[str, Any]] = []
+    
+    stall_list = []
     for stall in stalls:
-        stall_list.append(_with_reservation_info(stall))
-
+        stall_data = stall.to_dict()
+        active_reservation = Reservation.query.filter(
+            and_(
+                Reservation.stall_id == stall.id,
+                Reservation.status == 'confirmed'
+            )
+        ).first()
+        stall_data['is_reserved'] = active_reservation is not None
+        stall_data['reserved_by'] = None
+        if active_reservation:
+            stall_data['reserved_by'] = active_reservation.user.username
+        stall_list.append(stall_data)
+    
     return jsonify(stall_list), 200
-
 
 @stall_bp.route('/stats', methods=['GET'])
 def get_stall_stats():
     """Get stall statistics"""
     total_stalls = Stall.query.count()
-    reserved_stalls = (
-        db.session.query(Reservation)
-        .filter_by(status='confirmed')
-        .distinct(Reservation.stall_id)
-        .count()
-    )
+    reserved_stalls = db.session.query(Reservation).filter_by(status='confirmed').distinct(Reservation.stall_id).count()
     available_stalls = total_stalls - reserved_stalls
-
+    
     stalls_by_size = {
         'small': Stall.query.filter_by(size='small').count(),
         'medium': Stall.query.filter_by(size='medium').count(),
-        'large': Stall.query.filter_by(size='large').count(),
+        'large': Stall.query.filter_by(size='large').count()
     }
-
+    
     return jsonify({
         'total_stalls': total_stalls,
         'reserved_stalls': reserved_stalls,
