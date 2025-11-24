@@ -6,3 +6,52 @@ backend/.venv
 backend/venv/
 backend/env/
 backend/*.db
+backend/book_stall.db
+backend/.DS_Store
+
+# Frontend
+frontend/vendor-portal/node_modules/
+frontend/vendor-portal/.env.local
+frontend/vendor-portal/.env.development.local
+frontend/vendor-portal/.env.test.local
+frontend/vendor-portal/.env.production.local
+frontend/vendor-portal/build/
+frontend/vendor-portal/dist/
+frontend/vendor-portal/.DS_Store
+frontend/vender-portal/package-lock.json
+
+frontend/employee-portal/node_modules/
+frontend/employee-portal/.env.local
+frontend/employee-portal/.env.development.local
+frontend/employee-portal/.env.test.local
+frontend/employee-portal/.env.production.local
+frontend/employee-portal/build/
+frontend/employee-portal/dist/
+frontend/employee-portal/.DS_Store
+frontend/employee-portal/package-lock.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependencies
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+.nyc_output/
