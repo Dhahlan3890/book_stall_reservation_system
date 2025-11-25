@@ -52,7 +52,7 @@ const Login = () => {
             <motion.div className="text-5xl mb-3" animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 2, repeat: Infinity }}>
               🛡️
             </motion.div>
-            <h1 className="text-3xl font-bold text-gray-800">Employee Portal</h1>
+            <h1 className="text-3xl font-bold text-gray-800">Admin Portal</h1>
             <p className="text-gray-600 mt-2">Admin Access</p>
           </div>
 

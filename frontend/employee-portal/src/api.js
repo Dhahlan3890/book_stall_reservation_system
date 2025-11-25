@@ -89,6 +89,18 @@ export const employeeAPI = {
     logger.debug('Fetching employee stalls');
     return api.get('/employee/stalls');
   },
+  createStall: (stallData) => {
+    logger.debug('Creating new stall', { stallData });
+    return api.post('/stalls', stallData);
+  },
+  updateStall: (stallId, stallData) => {
+    logger.debug('Updating stall', { stallId, stallData });
+    return api.put(`/stalls/${stallId}`, stallData);
+  },
+  deleteStall: (stallId) => {
+    logger.debug('Deleting stall', { stallId });
+    return api.delete(`/stalls/${stallId}`);
+  },
   getReservations: (status) => {
     logger.debug('Fetching employee reservations', { status });
     return api.get(`/employee/reservations${status ? `?status=${status}` : ''}`);

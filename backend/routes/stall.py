@@ -97,6 +97,7 @@ def get_stall_stats():
 
 # Admin endpoints for creating stalls
 @stall_bp.route('', methods=['POST'])
+@jwt_required()
 def create_stall():
     """Create a new stall (admin only)"""
     data = request.get_json()
@@ -131,6 +132,7 @@ def create_stall():
         return jsonify({'error': str(e)}), 500
 
 @stall_bp.route('/<int:stall_id>', methods=['PUT'])
+@jwt_required()
 def update_stall(stall_id):
     """Update stall (admin only)"""
     stall = Stall.query.get(stall_id)
@@ -155,9 +157,47 @@ def update_stall(stall_id):
     if 'is_available' in data:
         stall.is_available = data['is_available']
     
-    db.session.commit()
+    try:
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Stall updated successfully',
+            'stall': stall.to_dict()
+        }), 200
     
-    return jsonify({
-        'message': 'Stall updated successfully',
-        'stall': stall.to_dict()
-    }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@stall_bp.route('/<int:stall_id>', methods=['DELETE'])
+@jwt_required()
+def delete_stall(stall_id):
+    """Delete a stall (admin only)"""
+    stall = Stall.query.get(stall_id)
+    
+    if not stall:
+        return jsonify({'error': 'Stall not found'}), 404
+    
+    # Check if stall has active reservations
+    active_reservation = Reservation.query.filter_by(
+        stall_id=stall_id,
+        status='confirmed'
+    ).first()
+    
+    if active_reservation:
+        return jsonify({
+            'error': 'Cannot delete stall with active reservations',
+            'reserved_by': active_reservation.user.business_name
+        }), 400
+    
+    try:
+        db.session.delete(stall)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Stall deleted successfully'
+        }), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500

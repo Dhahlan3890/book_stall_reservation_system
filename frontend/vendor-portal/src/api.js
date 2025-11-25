@@ -139,6 +139,10 @@ export const reservationAPI = {
     logger.debug('Cancelling reservation', { id });
     return api.post(`/reservations/${id}/cancel`);
   },
+  deleteReservation: (id) => {
+    logger.debug('Deleting reservation', { id });
+    return api.delete(`/reservations/${id}`);
+  },
   getReservationQR: (id) => {
     logger.debug('Fetching QR code', { id });
     return api.get(`/reservations/${id}/qr`);

@@ -64,12 +64,26 @@ def create_reservation():
         else:
             return jsonify({'error': 'You already have a pending request for this stall'}), 409
     
+    # Check if there's a cancelled reservation for this user-stall combination
+    cancelled_reservation = Reservation.query.filter(
+        and_(
+            Reservation.user_id == user_id,
+            Reservation.stall_id == stall.id,
+            Reservation.status == 'cancelled'
+        )
+    ).first()
+    
     try:
-        # Generate QR code data only for confirmed reservations
+        # Generate QR code data
         qr_data = generate_unique_qr_data()
         qr_base64, qr_image = generate_qr_code(qr_data)
         
-        # Create pending reservation - will be confirmed by admin
+        if cancelled_reservation:
+            # Delete the old cancelled reservation to avoid unique constraint
+            db.session.delete(cancelled_reservation)
+            db.session.flush()  # Flush to remove from session before creating new one
+        
+        # Create new pending reservation with fresh timestamps
         reservation = Reservation(
             user_id=user_id,
             stall_id=stall.id,
@@ -82,8 +96,6 @@ def create_reservation():
         db.session.add(reservation)
         db.session.commit()
         
-        # Send pending request email to vendor
-        # (Admin approval will send confirmation email)
         return jsonify({
             'message': 'Reservation request created successfully. Waiting for admin approval.',
             'reservation': reservation.to_dict(),
@@ -174,6 +186,35 @@ def get_reservation_qr(reservation_id):
         'qr_data': reservation.qr_data,
         'stall_name': reservation.stall.name
     }), 200
+
+@reservation_bp.route('/<int:reservation_id>', methods=['DELETE'])
+@jwt_required()
+def delete_reservation(reservation_id):
+    """Delete a cancelled reservation"""
+    user_id = get_jwt_user_id()
+    
+    reservation = Reservation.query.get(reservation_id)
+    
+    if not reservation:
+        return jsonify({'error': 'Reservation not found'}), 404
+    
+    if reservation.user_id != user_id:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    if reservation.status != 'cancelled':
+        return jsonify({'error': 'Only cancelled reservations can be deleted'}), 400
+    
+    try:
+        db.session.delete(reservation)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Reservation deleted successfully'
+        }), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 # Admin endpoints
 @reservation_bp.route('/admin/all', methods=['GET'])

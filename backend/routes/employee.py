@@ -65,7 +65,8 @@ def get_all_reservations():
     if status:
         query = query.filter_by(status=status)
     
-    reservations = query.all()
+    # Order by created_at descending (newest first)
+    reservations = query.order_by(Reservation.created_at.desc()).all()
     
     res_list = []
     for res in reservations:

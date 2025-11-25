@@ -84,6 +84,20 @@ const Dashboard = () => {
     }
   };
 
+  const handleDeleteReservation = async (reservation) => {
+    if (!window.confirm(`Are you sure you want to permanently delete this cancelled reservation for Stall ${reservation.stall?.name}?`)) {
+      return;
+    }
+
+    try {
+      await reservationAPI.deleteReservation(reservation.id);
+      toast.success('Reservation deleted successfully');
+      fetchData(); // Refresh data
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to delete reservation');
+    }
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -214,7 +228,7 @@ const Dashboard = () => {
                             <div className="flex items-center gap-4 text-sm text-gray-600 ml-10">
                               <div className="flex items-center gap-1">
                                 <Calendar className="w-4 h-4" />
-                                <span>{new Date(res.confirmed_at).toLocaleDateString()}</span>
+                                <span>{new Date(res.confirmed_at || res.created_at).toLocaleDateString()}</span>
                               </div>
                               <div className="flex items-center gap-1">
                                 <MapPin className="w-4 h-4" />
@@ -353,13 +367,24 @@ const Dashboard = () => {
                             ) : (
                               // Cancelled Status View
                               <motion.div
-                                className="bg-red-50 border-2 border-red-200 rounded-lg p-4 text-center"
+                                className="bg-red-50 border-2 border-red-200 rounded-lg p-4 space-y-3"
                                 initial={{ scale: 0.9 }}
                                 animate={{ scale: 1 }}
                               >
-                                <p className="text-2xl mb-2">❌</p>
-                                <p className="font-bold text-red-900">Reservation Cancelled</p>
-                                <p className="text-sm text-red-800 mt-2">This reservation has been cancelled.</p>
+                                <div className="text-center">
+                                  <p className="text-2xl mb-2">❌</p>
+                                  <p className="font-bold text-red-900">Reservation Cancelled</p>
+                                  <p className="text-sm text-red-800 mt-2">This reservation has been cancelled.</p>
+                                </div>
+                                <motion.button
+                                  onClick={() => handleDeleteReservation(res)}
+                                  className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-semibold transition"
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                >
+                                  <Trash2 className="w-5 h-5" />
+                                  Delete Permanently
+                                </motion.button>
                               </motion.div>
                             )}
                           </motion.div>

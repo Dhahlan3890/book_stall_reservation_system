@@ -186,8 +186,8 @@ const Reservations = () => {
                             </div>
                             <div>
                               <p className="text-sm text-gray-600">Date</p>
-                              <p className="font-bold">{new Date(res.confirmed_at).toLocaleDateString()}</p>
-                              <p className="text-sm text-gray-600">{new Date(res.confirmed_at).toLocaleTimeString()}</p>
+                              <p className="font-bold">{new Date(res.confirmed_at || res.created_at).toLocaleDateString()}</p>
+                              <p className="text-sm text-gray-600">{new Date(res.confirmed_at || res.created_at).toLocaleTimeString()}</p>
                             </div>
                             <div className="flex items-center justify-between md:justify-start">
                               <span className={`px-3 py-1 rounded-full text-sm font-semibold ${

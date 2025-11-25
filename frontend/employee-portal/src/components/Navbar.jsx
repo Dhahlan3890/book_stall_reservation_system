@@ -21,7 +21,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center h-16">
           <motion.div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/dashboard')}>
             <span className="text-2xl">🛡️</span>
-            <div className="text-xl font-bold hidden sm:block">Employee Portal</div>
+            <div className="text-xl font-bold hidden sm:block">Admin Portal</div>
           </motion.div>
 
           <div className="hidden md:flex items-center space-x-6">
