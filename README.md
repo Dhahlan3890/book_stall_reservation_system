@@ -66,8 +66,6 @@ book_stall_reservation/
 │       ├── package.json
 │       └── tailwind.config.js
 │
-├── SETUP.md               # Quick start guide
-├── API_DOCS.md            # API documentation
 └── README.md              # This file
 ```
 
